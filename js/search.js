@@ -66,6 +66,11 @@ async function doSearch(q, opts) {
     window.__userChangedType = false;   // 強制ID時は手動フラグを下ろす
   }
 
+  if (!opts.fromHistory && !opts.userTypeChange && typeof recordSearchHistory === "function") {
+    const selectedType = document.querySelector('input[name="searchType"]:checked').value;
+    recordSearchHistory(q, selectedType);
+  }
+
   /* 履歴復元でも forceId でIDに直したら、URLを正しい t=i に書き直す
      （古い t=h リンクを開いた瞬間に正しいURLへ静かに置換する） */
   if (!opts.fromHistory || opts.forceId) {

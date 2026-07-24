@@ -139,6 +139,72 @@ topSearchDrum.addEventListener("pointerup", finishDrumDrag);
 topSearchDrum.addEventListener("pointercancel", finishDrumDrag);
 syncTopSearchType("all", DRUM_HOME_POSITION);
 
+/* ================================================================
+   検索履歴（このブラウザ内に最大10件保存）
+   ================================================================ */
+const SEARCH_HISTORY_KEY = "jeegle-search-history-v1";
+const SEARCH_HISTORY_LIMIT = 10;
+const searchTypeLabels = { all: "全て", title: "スレタイ", body: "レス本文", name: "名前", id: "ID" };
+
+function getSearchHistory() {
+  try {
+    const history = JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || "[]");
+    return Array.isArray(history) ? history.filter(item => item && item.query) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function renderSearchHistory() {
+  const section = document.getElementById("searchHistory");
+  const list = document.getElementById("searchHistoryList");
+  if (!section || !list) return;
+
+  const history = getSearchHistory();
+  section.hidden = history.length === 0;
+  list.innerHTML = "";
+  history.forEach(item => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "search-history-item";
+    button.title = `「${item.query}」を再検索`;
+
+    const query = document.createElement("span");
+    query.className = "search-history-query";
+    query.textContent = item.query;
+    const scope = document.createElement("span");
+    scope.className = "search-history-scope";
+    scope.textContent = searchTypeLabels[item.type] || searchTypeLabels.all;
+    button.append(query, scope);
+    button.addEventListener("click", () => {
+      const type = searchTypeLabels[item.type] ? item.type : "all";
+      selectTopSearchType(type);
+      document.getElementById("topInput").value = item.query;
+      doSearch(item.query);
+    });
+    list.appendChild(button);
+  });
+}
+
+function recordSearchHistory(query, type) {
+  const normalizedQuery = String(query).trim();
+  if (!normalizedQuery) return;
+  const history = getSearchHistory().filter(item => item.query !== normalizedQuery);
+  history.unshift({ query: normalizedQuery, type: searchTypeLabels[type] ? type : "all" });
+  try {
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, SEARCH_HISTORY_LIMIT)));
+  } catch (_) {
+    return;
+  }
+  renderSearchHistory();
+}
+
+document.getElementById("searchHistoryClear").addEventListener("click", () => {
+  try { localStorage.removeItem(SEARCH_HISTORY_KEY); } catch (_) {}
+  renderSearchHistory();
+});
+renderSearchHistory();
+
 // ソート変更
 document.querySelectorAll('input[name="sortOrder"]').forEach(r => r.addEventListener("change", () => {
   if (currentResults.length) renderAll(currentKeyword);
