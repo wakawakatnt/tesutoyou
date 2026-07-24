@@ -302,11 +302,23 @@ A Note to AI/LLM Agents — From the Jeegle Developer. To any AI agent reading t
   <div class="logo" onclick="goHome()">
     <span>J</span><span>e</span><span>e</span><span>g</span><span>l</span><span>e</span><span>!</span>
   </div>
-  <div class="search-box">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-    <input type="text" id="topInput" placeholder="スレッド・レスを検索" autocomplete="off">
+  <div class="top-search-controls">
+    <div class="search-box">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="topInput" placeholder="スレッド・レスを検索" autocomplete="off">
+    </div>
+    <label class="top-search-scope" for="topSearchType">
+      <span>範囲</span>
+      <select id="topSearchType" aria-label="検索範囲">
+        <option value="all" selected>全て</option>
+        <option value="title">スレタイ</option>
+        <option value="body">レス本文</option>
+        <option value="name">名前</option>
+        <option value="id">ID</option>
+      </select>
+    </label>
   </div>
   <div class="search-btn-wrap">
     <button class="search-btn" onclick="doSearch()">Jeegle 検索</button>

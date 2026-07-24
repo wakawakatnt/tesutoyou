@@ -62,6 +62,7 @@ async function doSearch(q, opts) {
   if (idp.isId && (opts.forceId || (!opts.userTypeChange && !opts.fromHistory))) {
     const idRadio = document.querySelector('input[name="searchType"][value="id"]');
     if (idRadio && !idRadio.checked) idRadio.checked = true;
+    if (typeof syncTopSearchType === "function") syncTopSearchType("id");
     window.__userChangedType = false;   // 強制ID時は手動フラグを下ろす
   }
 

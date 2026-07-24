@@ -7,6 +7,17 @@ document.getElementById("topInput").addEventListener("keydown", e => { if (e.key
 document.getElementById("resultInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(e.target.value.trim()); });
 document.getElementById("detailInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(e.target.value.trim()); });
 
+function syncTopSearchType(value) {
+  const select = document.getElementById("topSearchType");
+  if (select && select.value !== value) select.value = value;
+}
+
+document.getElementById("topSearchType").addEventListener("change", e => {
+  const radio = document.querySelector(`input[name="searchType"][value="${e.target.value}"]`);
+  if (radio) radio.checked = true;
+  window.__userChangedType = true;
+});
+
 // ソート変更
 document.querySelectorAll('input[name="sortOrder"]').forEach(r => r.addEventListener("change", () => {
   if (currentResults.length) renderAll(currentKeyword);
@@ -17,6 +28,7 @@ document.querySelectorAll('input[name="searchMode"],input[name="searchType"]').f
   // ユーザーが手動でラジオを操作した印。これが立っている間は
   // id:プレフィックスでも type を id に強制しない（手動選択を尊重する）。
   window.__userChangedType = true;
+  if (r.name === "searchType") syncTopSearchType(r.value);
   const q = document.getElementById("resultInput").value.trim();
   if (q) doSearch(q, { userTypeChange: true });
 }));

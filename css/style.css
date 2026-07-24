@@ -12,13 +12,25 @@ body {
 .logo span:nth-child(3){color:#FBBC05}.logo span:nth-child(4){color:#4285F4}
 .logo span:nth-child(5){color:#34A853}.logo span:nth-child(6){color:#EA4335}
 .logo span:nth-child(7){color:#FBBC05}
+.top-search-controls {
+  display:flex; align-items:center; gap:10px; width:90%; max-width:710px;
+}
 .search-box {
-  display:flex; align-items:center; width:90%; max-width:584px;
+  display:flex; align-items:center; flex:1; min-width:0;
   border:1px solid #dfe1e5; border-radius:24px; padding:10px 16px; background:#fff;
 }
 .search-box:hover,.search-box:focus-within { box-shadow:0 1px 6px rgba(32,33,36,.28); border-color:transparent; }
 .search-box svg { flex-shrink:0; margin-right:12px; color:#9aa0a6; }
-.search-box input { flex:1; border:none; outline:none; font-size:16px; background:transparent; font-family:inherit; }
+.search-box input { flex:1; min-width:0; border:none; outline:none; font-size:16px; background:transparent; font-family:inherit; }
+.top-search-scope {
+  display:flex; align-items:center; gap:7px; flex-shrink:0; color:#5f6368; font-size:13px; white-space:nowrap;
+}
+.top-search-scope select {
+  min-width:88px; height:38px; padding:0 28px 0 10px; border:1px solid #dadce0; border-radius:4px;
+  background:#fff; color:#202124; cursor:pointer; font:inherit;
+}
+.top-search-scope select:hover { border-color:#b8bcc2; }
+.top-search-scope select:focus { border-color:#1a73e8; outline:none; box-shadow:0 0 0 2px rgba(26,115,232,.15); }
 .search-btn-wrap { margin-top:24px; }
 .search-btn {
   background:#f8f9fa; border:1px solid #f8f9fa; border-radius:4px;
@@ -212,6 +224,9 @@ mark.hl { background:#ffeb3b; padding:1px 2px; border-radius:2px; font-style:nor
   .search-options-bar { padding:8px 12px; gap:8px; }
   .results-container,.thread-detail-posts { padding:8px 12px 40px; }
   .logo { font-size:48px; }
+  .top-search-controls { gap:8px; }
+  .top-search-scope { gap:5px; font-size:12px; }
+  .top-search-scope select { min-width:76px; height:36px; padding-left:8px; }
 
   .post-buttons { margin-left:auto; margin-top:0; width:auto; }
 
