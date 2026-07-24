@@ -13,7 +13,7 @@ body {
 .logo span:nth-child(5){color:#34A853}.logo span:nth-child(6){color:#EA4335}
 .logo span:nth-child(7){color:#FBBC05}
 .top-search-controls {
-  display:flex; align-items:center; width:90%; max-width:860px;
+  display:flex; align-items:center; width:90%; max-width:900px;
 }
 .search-box {
   display:flex; align-items:center; flex:1; min-width:0;
@@ -23,25 +23,49 @@ body {
 .search-box svg { flex-shrink:0; margin-right:12px; color:#9aa0a6; }
 .search-box input { flex:1; min-width:0; border:none; outline:none; font-size:16px; background:transparent; font-family:inherit; }
 .top-search-scope {
-  display:flex; align-items:stretch; flex:0 1 350px; min-width:150px; margin-left:-1px;
-  border:1px solid #dfe1e5; border-radius:0 20px 20px 0; background:#fff; overflow:hidden;
+  display:flex; align-items:center; flex:0 0 310px; min-height:154px; margin-left:-1px;
+  color:#e8eaed;
 }
-.top-search-scope-label {
-  display:flex; align-items:center; padding:0 10px; color:#5f6368; font-size:12px; white-space:nowrap;
-  background:#f8f9fa; border-right:1px solid #dfe1e5;
+.scope-drum {
+  width:116px; height:146px; padding:10px 8px 8px; border:1px solid #4e5359; border-radius:9px;
+  background:linear-gradient(135deg, #555b61 0%, #1f2429 22%, #60666b 48%, #24292e 73%, #53595e 100%);
+  box-shadow:inset 0 1px rgba(255,255,255,.3), inset 0 -1px rgba(0,0,0,.8), 0 4px 10px rgba(0,0,0,.28);
+  cursor:ns-resize; user-select:none; touch-action:none;
 }
-.top-search-scope-options {
-  display:flex; align-items:stretch; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none;
+.scope-drum:focus-visible { outline:2px solid #8ab4f8; outline-offset:3px; }
+.scope-drum-caption { display:block; margin-bottom:6px; color:#d9dde0; font-size:10px; font-weight:700; letter-spacing:.08em; text-align:center; text-shadow:0 1px #111; }
+.scope-drum-window {
+  position:relative; height:112px; overflow:hidden; border:1px solid #090b0d; border-radius:4px;
+  background:linear-gradient(#14181c, #30363b 48%, #14181c); box-shadow:inset 0 2px 5px #000;
 }
-.top-search-scope-options::-webkit-scrollbar { display:none; }
-.top-search-scope-option {
-  flex:0 0 auto; min-width:68px; padding:0 12px; border:0; border-left:1px solid #edf0f2;
-  background:#fff; color:#5f6368; cursor:pointer; font:13px/1 inherit; white-space:nowrap; transition:background .15s,color .15s;
+.scope-drum-window::before, .scope-drum-window::after {
+  content:""; position:absolute; z-index:2; right:0; left:0; height:38px; pointer-events:none;
 }
-.top-search-scope-option:first-child { border-left:0; }
-.top-search-scope-option:hover { background:#f1f3f4; color:#202124; }
-.top-search-scope-option.active { background:#e8f0fe; color:#1967d2; font-weight:700; }
-.top-search-scope-option:focus-visible { position:relative; z-index:1; outline:2px solid #1a73e8; outline-offset:-2px; }
+.scope-drum-window::before { top:0; background:linear-gradient(#13171b 5%, rgba(19,23,27,0)); }
+.scope-drum-window::after { bottom:0; background:linear-gradient(rgba(19,23,27,0), #13171b 95%); }
+.scope-drum-window:focus-visible { outline:0; }
+.scope-drum-items { transition:transform .22s cubic-bezier(.2,.7,.25,1); }
+.scope-drum-item {
+  display:flex; align-items:center; justify-content:center; height:36px; color:#aab0b5; font-size:13px; font-weight:700;
+  text-shadow:0 1px #000; opacity:.3; filter:blur(.7px); transform:scale(.9); transition:opacity .2s, filter .2s, transform .2s, color .2s;
+}
+.scope-drum-item.active { color:#fff; opacity:1; filter:none; transform:scale(1); }
+.scope-tree { position:relative; display:flex; align-items:center; min-height:154px; padding-left:34px; }
+.scope-tree::before {
+  content:""; position:absolute; left:0; top:50%; width:34px; height:1px; background:#69717a;
+  box-shadow:0 1px rgba(255,255,255,.16);
+}
+.scope-tree-trunk { position:absolute; left:34px; top:16px; bottom:16px; width:1px; background:#69717a; box-shadow:1px 0 rgba(255,255,255,.16); }
+.scope-tree-options { display:flex; flex-direction:column; gap:3px; padding-left:18px; }
+.scope-tree-option {
+  position:relative; min-width:116px; height:25px; padding:0 12px; border:1px solid #565c63; border-radius:3px;
+  background:linear-gradient(180deg, #353b41, #20252a); color:#dce1e5; cursor:pointer; font:12px/1 inherit; text-align:left;
+  box-shadow:inset 0 1px rgba(255,255,255,.12), 0 1px 2px rgba(0,0,0,.24); transition:background .15s,border-color .15s,color .15s;
+}
+.scope-tree-option::before { content:""; position:absolute; left:-19px; top:50%; width:18px; height:1px; background:#69717a; box-shadow:0 1px rgba(255,255,255,.16); }
+.scope-tree-option:hover { background:linear-gradient(180deg, #454c53, #2b3036); border-color:#8b949e; }
+.scope-tree-option.active { border-color:#8ab4f8; background:linear-gradient(180deg, #3b74bb, #1d4f86); color:#fff; font-weight:700; }
+.scope-tree-option:focus-visible { outline:2px solid #8ab4f8; outline-offset:2px; }
 .search-btn-wrap { margin-top:24px; }
 .search-btn {
   background:#f8f9fa; border:1px solid #f8f9fa; border-radius:4px;
@@ -236,9 +260,16 @@ mark.hl { background:#ffeb3b; padding:1px 2px; border-radius:2px; font-style:nor
   .results-container,.thread-detail-posts { padding:8px 12px 40px; }
   .logo { font-size:48px; }
   .top-search-controls { width:94%; }
-  .top-search-scope { flex-basis:138px; min-width:108px; }
-  .top-search-scope-label { padding:0 7px; font-size:11px; }
-  .top-search-scope-option { min-width:64px; padding:0 9px; font-size:12px; }
+  .top-search-scope { flex-basis:236px; min-height:142px; }
+  .scope-drum { width:94px; height:134px; padding:8px 6px 6px; }
+  .scope-drum-caption { font-size:9px; }
+  .scope-drum-window { height:104px; }
+  .scope-tree { min-height:142px; padding-left:26px; }
+  .scope-tree::before { width:26px; }
+  .scope-tree-trunk { left:26px; top:12px; bottom:12px; }
+  .scope-tree-options { gap:2px; padding-left:13px; }
+  .scope-tree-option { min-width:93px; height:23px; padding:0 8px; font-size:11px; }
+  .scope-tree-option::before { left:-14px; width:13px; }
 
   .post-buttons { margin-left:auto; margin-top:0; width:auto; }
 
