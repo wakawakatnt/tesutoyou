@@ -708,6 +708,30 @@ mark.hl { background:#ffeb3b; padding:1px 2px; border-radius:2px; font-style:nor
   font-size: 11px;
   color: #5f8a3c;
 }
+
+/* ===== 検索履歴 ===== */
+.search-history {
+  width:90%; max-width:584px; margin-top:24px; padding:14px 16px;
+  border:1px solid #e3e6e8; border-radius:12px; background:#fff; box-shadow:0 1px 3px rgba(60,64,67,.08);
+}
+.search-history[hidden] { display:none; }
+.search-history-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.search-history-head h2 { color:#3c4043; font-size:14px; font-weight:700; }
+.search-history-clear { border:0; background:none; color:#1a73e8; cursor:pointer; font:12px inherit; padding:3px 0; }
+.search-history-clear:hover { text-decoration:underline; }
+.search-history-list { display:flex; flex-wrap:wrap; gap:8px; }
+.search-history-item {
+  display:inline-flex; align-items:center; gap:7px; max-width:100%; padding:6px 9px; border:1px solid #dadce0; border-radius:16px;
+  background:#f8f9fa; color:#3c4043; cursor:pointer; font:13px inherit; transition:background .15s,border-color .15s;
+}
+.search-history-item:hover { background:#f1f3f4; border-color:#bdc1c6; }
+.search-history-query { max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.search-history-scope { flex-shrink:0; padding-left:7px; border-left:1px solid #dadce0; color:#5f6368; font-size:11px; }
+@media(max-width:640px){
+  .search-history { width:94%; padding:12px; }
+  .search-history-query { max-width:180px; }
+}
+
 /* ===== モバイル：展開スレッドの折りたたみレール（幅を取らずに重ねる）===== */
 .thread-details-inline.open {
   display: block !important;
