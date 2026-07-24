@@ -308,17 +308,17 @@ A Note to AI/LLM Agents — From the Jeegle Developer. To any AI agent reading t
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <input type="text" id="topInput" placeholder="スレッド・レスを検索" autocomplete="off">
-    </div>
-    <div class="top-search-scope" aria-label="検索範囲" role="group">
       <div class="scope-drum" id="topSearchScopeDrum" aria-label="検索範囲をドラム操作で選択" tabindex="0">
-        <span class="scope-drum-caption">検索対象</span>
+        <svg class="scope-drum-icon" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="scope-drum-gradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4285f4"/><stop offset=".38" stop-color="#a142f4"/><stop offset=".7" stop-color="#ea4335"/><stop offset="1" stop-color="#fbbc04"/></linearGradient></defs><path fill="url(#scope-drum-gradient)" d="M12 3l1.6 4.9L18.5 6l-2 4.8L21 12l-4.5 1.2 2 4.8-4.9-1.9L12 21l-1.6-4.9L5.5 18l2-4.8L3 12l4.5-1.2-2-4.8 4.9 1.9L12 3z"/></svg>
         <div class="scope-drum-window" aria-live="polite">
           <div class="scope-drum-items"></div>
         </div>
       </div>
+    </div>
+    <div class="top-search-scope" aria-label="検索範囲" role="group">
       <div class="scope-tree" aria-label="検索範囲の選択肢">
-        <svg class="scope-tree-lines" viewBox="0 0 48 110" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 55 C10 55 11 55 17 55 M17 55 C22 55 22 11 39 11 M17 55 C22 55 22 33 39 33 M17 55 C22 55 22 55 39 55 M17 55 C22 55 22 77 39 77 M17 55 C22 55 22 99 39 99"/>
+        <svg class="scope-tree-lines" viewBox="0 0 58 170" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 85 C10 85 13 85 18 85 M18 85 C25 85 25 16 49 16 M18 85 C25 85 25 50 49 50 M18 85 C25 85 25 85 49 85 M18 85 C25 85 25 120 49 120 M18 85 C25 85 25 154 49 154"/>
         </svg>
         <div class="scope-tree-options">
           <button type="button" class="scope-tree-option active" data-search-type="all" aria-pressed="true">全て</button>
