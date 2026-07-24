@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>統計 - Jeegle!</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DDHGB57HTW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DDHGB57HTW');
+</script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/toukei.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+<div class="tk-page">
+  <div class="tk-header">
+    <a href="index.html" class="tk-logo">
+      <span>J</span><span>e</span><span>e</span><span>g</span><span>l</span><span>e</span><span>!</span>
+    </a>
+    <div class="tk-header-title">📊 統計</div>
+    <div class="tk-header-actions">
+      <button class="rk-share-btn" id="shareBtn" title="現在のビューURLをコピー">🔗 URL共有</button>
+      <a href="ranking.html" class="tk-header-link">🏆 ランキング</a>
+      <a href="index.html" class="tk-header-link">← トップ</a>
+    </div>
+  </div>
+
+  <div class="tk-body">
+
+    <div class="tk-modesel" id="modeSel">
+      <button class="tk-modebtn active" data-mode="hourly">
+        <div class="ic">⏰</div>
+        <div class="txt">
+          <div class="ttl">時別推移</div>
+          <div class="sub">1日を24時間で見る</div>
+        </div>
+      </button>
+      <button class="tk-modebtn" data-mode="daily">
+        <div class="ic">📅</div>
+        <div class="txt">
+          <div class="ttl">日別推移</div>
+          <div class="sub">複数日を1日単位で見る</div>
+        </div>
+      </button>
+    </div>
+
+    <div class="tk-controls">
+      <div class="tk-ctrl-group" id="hourlyCtrls">
+        <strong>日付</strong>
+        <div class="tk-pbtns" id="hourlyPbtns">
+          <button class="tk-pbtn active" data-day="today">今日</button>
+          <button class="tk-pbtn" data-day="yesterday">昨日</button>
+          <button class="tk-pbtn" data-day="custom">指定</button>
+        </div>
+        <input type="date" id="hourlyDate" class="tk-date-input" style="display:none;">
+      </div>
+
+      <div class="tk-ctrl-group" id="dailyCtrls" style="display:none;">
+        <strong>期間</strong>
+        <div class="tk-pbtns" id="dailyPbtns">
+          <button class="tk-pbtn active" data-period="7days">直近7日</button>
+          <button class="tk-pbtn" data-period="14days">直近14日</button>
+          <button class="tk-pbtn" data-period="30days">直近30日</button>
+          <button class="tk-pbtn" data-period="month">今月</button>
+          <button class="tk-pbtn" data-period="lastmonth">先月</button>
+          <button class="tk-pbtn" data-period="custom">指定</button>
+        </div>
+        <span id="dailyCustomRange" style="display:none; align-items:center; gap:6px;">
+          <input type="date" id="dateFrom" class="tk-date-input">
+          <span style="color:#5f6368;">〜</span>
+          <input type="date" id="dateTo" class="tk-date-input">
+        </span>
+      </div>
+
+      <div class="tk-ctrl-group" style="margin-left:auto;">
+        <span class="tk-cache-info" id="cacheInfo"></span>
+        <button class="tk-reload" id="reloadBtn" title="強制再取得">🔄 更新</button>
+      </div>
+    </div>
+
+    <div class="tk-status" id="statusBar"></div>
+
+    <div class="tk-metrics" id="metrics">
+      <div class="tk-metric" data-color="blue">
+        <div class="tk-metric-icon">💬</div>
+        <div class="tk-metric-val" id="mPosts">-</div>
+        <div class="tk-metric-label">レス数</div>
+        <div class="tk-metric-sub" id="mPostsSub"></div>
+      </div>
+      <div class="tk-metric" data-color="red">
+        <div class="tk-metric-icon">📝</div>
+        <div class="tk-metric-val" id="mThreads">-</div>
+        <div class="tk-metric-label">スレ立て数</div>
+        <div class="tk-metric-sub" id="mThreadsSub"></div>
+      </div>
+      <div class="tk-metric" data-color="yellow">
+        <div class="tk-metric-icon">🆔</div>
+        <div class="tk-metric-val" id="mIds">-</div>
+        <div class="tk-metric-label" id="mIdsLabel">ID数</div>
+        <div class="tk-metric-sub" id="mIdsSub"></div>
+      </div>
+      <div class="tk-metric" data-color="purple">
+        <div class="tk-metric-icon">📈</div>
+        <div class="tk-metric-val" id="mAvgPI">-</div>
+        <div class="tk-metric-label">平均レス/ID数</div>
+      </div>
+      <div class="tk-metric" data-color="indigo">
+        <div class="tk-metric-icon">🎪</div>
+        <div class="tk-metric-val" id="mAvgTI">-</div>
+        <div class="tk-metric-label">平均スレ立て/ID数</div>
+      </div>
+      <div class="tk-metric" data-color="teal">
+        <div class="tk-metric-icon">🧵</div>
+        <div class="tk-metric-val" id="mAvgPT">-</div>
+        <div class="tk-metric-label">平均レス/スレ</div>
+      </div>
+      <div class="tk-metric" data-color="green">
+        <div class="tk-metric-icon">👥</div>
+        <div class="tk-metric-val" id="mAvgA">-</div>
+        <div class="tk-metric-label" id="mAvgALabel">平均アクティブID</div>
+        <div class="tk-metric-sub" id="mAvgASub"></div>
+      </div>
+      <div class="tk-metric" data-color="orange">
+        <div class="tk-metric-icon">🔥</div>
+        <div class="tk-metric-val" id="mPeak">-</div>
+        <div class="tk-metric-label" id="mPeakLabel">ピーク時間帯</div>
+        <div class="tk-metric-sub" id="mPeakSub"></div>
+      </div>
+      <div class="tk-metric" data-color="cyan">
+        <div class="tk-metric-icon">📅</div>
+        <div class="tk-metric-val" id="mRange">-</div>
+        <div class="tk-metric-label" id="mRangeLabel">対象</div>
+        <div class="tk-metric-sub" id="mRangeSub"></div>
+      </div>
+    </div>
+
+    <div class="tk-card">
+      <div class="tk-card-head">
+        <div>
+          <span class="tk-card-title" id="mainChartTitle">⏰ 時別推移</span>
+          <span class="tk-card-title-sub" id="mainChartSub"></span>
+        </div>
+        <div class="tk-card-tools">
+          <div class="tk-series" id="seriesTog">
+            <button class="active" data-key="p"><span class="dot"></span>レス</button>
+            <button class="active" data-key="t"><span class="dot"></span>スレ立て</button>
+            <button class="active" data-key="n"><span class="dot"></span><span class="lbl-n">新規ID</span></button>
+            <button class="active" data-key="a"><span class="dot"></span><span class="lbl-a">アクティブID</span></button>
+             <div class="tk-extra-dropdown" id="extraDropdown">
+      <button class="tk-extra-toggle" id="extraToggleBtn">その他 ▾</button>
+      <div class="tk-extra-menu" id="extraMenu">
+        <label class="tk-extra-item">
+          <input type="checkbox" data-key="pi" /> <span class="tk-extra-dot" style="background:#9c27b0"></span>
+          <span class="tk-extra-lbl" id="extraLblPI">レス/アクティブID</span>
+        </label>
+        <label class="tk-extra-item">
+          <input type="checkbox" data-key="ti" /> <span class="tk-extra-dot" style="background:#00897b"></span>
+          <span class="tk-extra-lbl" id="extraLblTI">スレ立て/アクティブID</span>
+        </label>
+        <label class="tk-extra-item">
+          <input type="checkbox" data-key="pt" /> <span class="tk-extra-dot" style="background:#e91e63"></span>
+          <span class="tk-extra-lbl" id="extraLblPT">平均レス/スレ</span>
+        </label>
+      </div>
+    </div>
+          </div>
+          <div class="tk-tog" id="typeTog">
+            <button class="active" data-type="line">折れ線</button>
+            <button data-type="bar">棒</button>
+          </div>
+          <div class="tk-tog" id="layoutTog">
+            <button class="active" data-layout="combined">統合</button>
+            <button data-layout="split">分割</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tk-chart-wrap tall" id="mainChartBox">
+        <canvas id="mainChart"></canvas>
+      </div>
+
+      <div class="tk-split" id="splitBox" style="display:none;">
+        <div class="tk-split-card">
+          <div class="ttl"><span class="dot" style="background:#4285F4"></span>レス数</div>
+          <div class="tk-chart-wrap"><canvas id="splitP"></canvas></div>
+        </div>
+        <div class="tk-split-card">
+          <div class="ttl"><span class="dot" style="background:#EA4335"></span>スレ立て数</div>
+          <div class="tk-chart-wrap"><canvas id="splitT"></canvas></div>
+        </div>
+        <div class="tk-split-card">
+          <div class="ttl"><span class="dot" style="background:#FBBC05"></span><span class="split-lbl-n">新規ID数</span></div>
+          <div class="tk-chart-wrap"><canvas id="splitN"></canvas></div>
+        </div>
+        <div class="tk-split-card">
+          <div class="ttl"><span class="dot" style="background:#34A853"></span><span class="split-lbl-a">アクティブID数</span></div>
+          <div class="tk-chart-wrap"><canvas id="splitA"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <details class="tk-card tk-collapse" id="tableSection">
+      <summary class="tk-collapse-head">
+        <span class="tk-card-title">📋 データ一覧</span>
+        <span class="tk-collapse-arrow">▾</span>
+      </summary>
+      <div class="tk-collapse-body">
+        <div class="tk-table-wrap">
+          <table class="tk-table" id="statsTable">
+            <thead>
+              <tr>
+                <th id="thLabel">時間</th>
+                <th>レス数</th>
+                <th>スレ立て</th>
+                <th id="thN">新規ID</th>
+                <th id="thA">アクティブID</th>
+              </tr>
+            </thead>
+            <tbody id="statsTableBody"></tbody>
+            <tfoot>
+              <tr>
+                <td>合計</td>
+                <td id="ftPosts">-</td>
+                <td id="ftThreads">-</td>
+                <td id="ftIds">-</td>
+                <td id="ftActive">-</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <details class="tk-card tk-collapse" id="advancedSection">
+      <summary class="tk-collapse-head">
+        <span class="tk-card-title">🔬 詳細分析 — 3D散布図</span>
+        <span class="tk-collapse-arrow">▾</span>
+      </summary>
+      <div class="tk-collapse-body">
+        <div class="tk-card-head">
+          <span class="tk-card-title-sub" id="scatter3dSub">X=アクティブID数 / Y=スレ立て数 / Z=レス数 — 1点=各区分（時 or 日）</span>
+        </div>
+        <div class="tk-3d-wrap" id="scatter3d"></div>
+        <div class="tk-3d-help">🖱️ ドラッグで回転 / ホイールで拡大 / ダブルクリックでリセット</div>
+      </div>
+    </details>
+
+    <div class="tk-last-updated" id="lastUpdated"></div>
+  </div>
+</div>
+
+<script src="js/toukei-config.js"></script>
+<script src="js/toukei-utils.js"></script>
+<script src="js/toukei-data.js"></script>
+<script src="js/toukei-render.js"></script>
+<script src="js/toukei-main.js"></script>
+</body>
+</html>

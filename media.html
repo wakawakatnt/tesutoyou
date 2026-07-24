@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貼られた画像一覧 - Jeegle!</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DDHGB57HTW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DDHGB57HTW');
+</script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/media.css">
+</head>
+<body>
+<div class="md-page">
+  <div class="md-header">
+    <a class="md-logo" href="index.html">
+      <span>J</span><span>e</span><span>e</span><span>g</span><span>l</span><span>e</span><span>!</span>
+    </a>
+    <div class="md-header-title">🖼️ 貼られた画像一覧</div>
+    <div class="md-header-actions">
+      <button class="md-share-btn" id="mdShareBtn">🔗 URL共有</button>
+      <a class="md-back" href="index.html">← 検索に戻る</a>
+    </div>
+  </div>
+
+  <div class="md-body">
+    <div class="md-topbar">
+      <div class="md-info">
+        最終更新: <strong id="mdUpdated">読み込み中…</strong>
+        <span style="margin-left:10px;">表示中: <strong id="mdCount">0</strong> / <strong id="mdTotal">0</strong> 件</span>
+      </div>
+      <div class="md-filters" id="mdFilters">
+        <button class="md-fbtn active" data-kind="">すべて</button>
+      </div>
+    </div>
+    <div class="md-status" id="mdStatus"></div>
+    <div class="md-grid" id="mdGrid"></div>
+    <div class="md-sentinel" id="mdSentinel"></div>
+    <div class="md-loading" id="mdLoading" style="display:none;">読み込み中… <span class="md-spinner"></span></div>
+    <div class="md-end" id="mdEnd" style="display:none;">— 末尾まで表示しました —</div>
+  </div>
+</div>
+
+<div class="md-modal" id="mdModal">
+  <div class="md-modal-inner" id="mdModalInner">
+    <button class="md-modal-close" id="mdModalClose" aria-label="閉じる">✕</button>
+    <button class="md-modal-nav prev" id="mdModalPrev" aria-label="前へ">‹</button>
+    <button class="md-modal-nav next" id="mdModalNext" aria-label="次へ">›</button>
+    <div class="md-modal-media-wrap" id="mdModalMedia"></div>
+    <div class="md-modal-info" id="mdModalInfo"></div>
+  </div>
+</div>
+<script src="js/media/config.js"></script>
+<script src="js/media/utils.js"></script>
+<script src="js/media/detect.js"></script>
+<script src="js/media/favorites.js"></script>
+<script src="js/media/data.js"></script>
+<script src="js/media/grid.js"></script>
+<script src="js/media/modal.js"></script>
+<script src="js/media/main.js"></script>
+
+
+</body>
+</html>
