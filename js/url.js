@@ -106,8 +106,7 @@ function loadUrl() {
   const me = document.querySelector(`input[name="searchMode"][value="${modeVal}"]`);
   if (te) te.checked = true;
   if (me) me.checked = true;
-  const topSearchType = document.getElementById("topSearchType");
-  if (topSearchType) topSearchType.value = typeVal;
+  if (typeof syncTopSearchType === "function") syncTopSearchType(typeVal);
 
   applyDateParam(dateVal);
 

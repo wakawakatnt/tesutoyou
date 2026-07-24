@@ -7,16 +7,38 @@ document.getElementById("topInput").addEventListener("keydown", e => { if (e.key
 document.getElementById("resultInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(e.target.value.trim()); });
 document.getElementById("detailInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(e.target.value.trim()); });
 
+const topSearchTypeButtons = Array.from(document.querySelectorAll(".top-search-scope-option"));
+const topSearchTypes = topSearchTypeButtons.map(button => button.dataset.searchType);
+
 function syncTopSearchType(value) {
-  const select = document.getElementById("topSearchType");
-  if (select && select.value !== value) select.value = value;
+  topSearchTypeButtons.forEach(button => {
+    const active = button.dataset.searchType === value;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+    if (active) button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  });
 }
 
-document.getElementById("topSearchType").addEventListener("change", e => {
-  const radio = document.querySelector(`input[name="searchType"][value="${e.target.value}"]`);
+function selectTopSearchType(value) {
+  const radio = document.querySelector(`input[name="searchType"][value="${value}"]`);
   if (radio) radio.checked = true;
+  syncTopSearchType(value);
   window.__userChangedType = true;
-});
+}
+
+topSearchTypeButtons.forEach(button => button.addEventListener("click", () => {
+  selectTopSearchType(button.dataset.searchType);
+}));
+
+const topSearchScopeRail = document.getElementById("topSearchScopeRail");
+topSearchScopeRail.addEventListener("wheel", e => {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  e.preventDefault();
+  const activeType = document.querySelector(".top-search-scope-option.active")?.dataset.searchType;
+  const activeIndex = Math.max(0, topSearchTypes.indexOf(activeType));
+  const nextIndex = Math.max(0, Math.min(topSearchTypes.length - 1, activeIndex + (e.deltaY > 0 ? 1 : -1)));
+  if (nextIndex !== activeIndex) selectTopSearchType(topSearchTypes[nextIndex]);
+}, { passive: false });
 
 // ソート変更
 document.querySelectorAll('input[name="sortOrder"]').forEach(r => r.addEventListener("change", () => {
