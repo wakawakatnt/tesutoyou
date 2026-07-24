@@ -11,43 +11,92 @@ const topSearchTreeButtons = Array.from(document.querySelectorAll(".scope-tree-o
 const topSearchTypes = topSearchTreeButtons.map(button => button.dataset.searchType);
 const topSearchDrum = document.getElementById("topSearchScopeDrum");
 const topSearchDrumItems = document.querySelector(".scope-drum-items");
-const topSearchDrumOptions = Array.from(document.querySelectorAll(".scope-drum-item"));
-const DRUM_ITEM_HEIGHT = 36;
-const DRUM_CENTER_OFFSET = 38;
+const DRUM_ITEM_HEIGHT = 18;
+const DRUM_CENTER_OFFSET = 7;
+const DRUM_LOOP_COUNT = 7;
+const DRUM_HOME_POSITION = Math.floor(DRUM_LOOP_COUNT / 2) * topSearchTypes.length;
+const DRUM_MIN_POSITION = topSearchTypes.length;
+const DRUM_MAX_POSITION = (DRUM_LOOP_COUNT - 2) * topSearchTypes.length;
+let drumPosition = DRUM_HOME_POSITION;
 let drumDrag = null;
 
-function clampDrumIndex(index) {
-  return Math.max(0, Math.min(topSearchTypes.length - 1, index));
+for (let loop = 0; loop < DRUM_LOOP_COUNT; loop += 1) {
+  topSearchTypes.forEach((type, index) => {
+    const item = document.createElement("span");
+    item.className = "scope-drum-item";
+    item.dataset.searchType = type;
+    item.dataset.drumPosition = String(loop * topSearchTypes.length + index);
+    item.textContent = topSearchTreeButtons[index].textContent;
+    topSearchDrumItems.appendChild(item);
+  });
+}
+const topSearchDrumOptions = Array.from(document.querySelectorAll(".scope-drum-item"));
+
+function typeIndexForDrumPosition(position) {
+  return ((position % topSearchTypes.length) + topSearchTypes.length) % topSearchTypes.length;
 }
 
-function moveDrumTo(index, animate = true) {
+function moveDrumTo(position, animate = true) {
   topSearchDrumItems.style.transition = animate ? "" : "none";
-  topSearchDrumItems.style.transform = `translateY(${DRUM_CENTER_OFFSET - index * DRUM_ITEM_HEIGHT}px)`;
+  topSearchDrumItems.style.transform = `translateY(${DRUM_CENTER_OFFSET - position * DRUM_ITEM_HEIGHT}px)`;
   if (!animate) requestAnimationFrame(() => { topSearchDrumItems.style.transition = ""; });
 }
 
-function syncTopSearchType(value) {
-  const index = Math.max(0, topSearchTypes.indexOf(value));
+function closestDrumPositionForType(type) {
+  const typeIndex = Math.max(0, topSearchTypes.indexOf(type));
+  let closest = typeIndex;
+  let distance = Infinity;
+  for (let loop = 0; loop < DRUM_LOOP_COUNT; loop += 1) {
+    const candidate = loop * topSearchTypes.length + typeIndex;
+    const candidateDistance = Math.abs(candidate - drumPosition);
+    if (candidateDistance < distance) {
+      closest = candidate;
+      distance = candidateDistance;
+    }
+  }
+  return closest;
+}
+
+function recenterDrumIfNeeded() {
+  if (drumPosition > DRUM_MIN_POSITION && drumPosition < DRUM_MAX_POSITION) return;
+  const scheduledPosition = drumPosition;
+  const currentTypeIndex = typeIndexForDrumPosition(scheduledPosition);
+  window.setTimeout(() => {
+    if (drumPosition !== scheduledPosition) return;
+    drumPosition = DRUM_HOME_POSITION + currentTypeIndex;
+    moveDrumTo(drumPosition, false);
+  }, 230);
+}
+
+function syncTopSearchType(value, preferredPosition) {
+  const typeIndex = Math.max(0, topSearchTypes.indexOf(value));
+  drumPosition = preferredPosition === undefined ? closestDrumPositionForType(value) : preferredPosition;
   topSearchTreeButtons.forEach(button => {
     const active = button.dataset.searchType === value;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
   topSearchDrumOptions.forEach(item => item.classList.toggle("active", item.dataset.searchType === value));
-  moveDrumTo(index);
+  moveDrumTo(drumPosition);
+  recenterDrumIfNeeded();
+  return typeIndex;
 }
 
-function selectTopSearchType(value) {
+function selectTopSearchType(value, preferredPosition) {
   const radio = document.querySelector(`input[name="searchType"][value="${value}"]`);
   if (radio) radio.checked = true;
-  syncTopSearchType(value);
+  syncTopSearchType(value, preferredPosition);
   window.__userChangedType = true;
 }
 
 function selectRelativeDrumType(direction) {
-  const activeType = document.querySelector(".scope-tree-option.active")?.dataset.searchType;
-  const index = clampDrumIndex(topSearchTypes.indexOf(activeType) + direction);
-  selectTopSearchType(topSearchTypes[index]);
+  if ((direction > 0 && drumPosition >= DRUM_MAX_POSITION) || (direction < 0 && drumPosition <= DRUM_MIN_POSITION)) {
+    drumPosition = DRUM_HOME_POSITION + typeIndexForDrumPosition(drumPosition);
+    moveDrumTo(drumPosition, false);
+  }
+  const nextPosition = drumPosition + direction;
+  const nextType = topSearchTypes[typeIndexForDrumPosition(nextPosition)];
+  selectTopSearchType(nextType, nextPosition);
 }
 
 topSearchTreeButtons.forEach(button => button.addEventListener("click", () => {
@@ -67,28 +116,28 @@ topSearchDrum.addEventListener("keydown", e => {
 });
 
 topSearchDrum.addEventListener("pointerdown", e => {
-  const activeType = document.querySelector(".scope-tree-option.active")?.dataset.searchType;
-  drumDrag = { startY: e.clientY, startIndex: Math.max(0, topSearchTypes.indexOf(activeType)), pointerId: e.pointerId };
+  drumDrag = { startY: e.clientY, startPosition: drumPosition, pointerId: e.pointerId };
   topSearchDrum.setPointerCapture(e.pointerId);
 });
 
 topSearchDrum.addEventListener("pointermove", e => {
   if (!drumDrag || e.pointerId !== drumDrag.pointerId) return;
-  const offset = drumDrag.startIndex - (e.clientY - drumDrag.startY) / DRUM_ITEM_HEIGHT;
+  const position = drumDrag.startPosition - (e.clientY - drumDrag.startY) / DRUM_ITEM_HEIGHT;
+  const clampedPosition = Math.max(DRUM_MIN_POSITION, Math.min(DRUM_MAX_POSITION, position));
   topSearchDrumItems.style.transition = "none";
-  topSearchDrumItems.style.transform = `translateY(${DRUM_CENTER_OFFSET - Math.max(0, Math.min(topSearchTypes.length - 1, offset)) * DRUM_ITEM_HEIGHT}px)`;
+  topSearchDrumItems.style.transform = `translateY(${DRUM_CENTER_OFFSET - clampedPosition * DRUM_ITEM_HEIGHT}px)`;
 });
 
 function finishDrumDrag(e) {
   if (!drumDrag || e.pointerId !== drumDrag.pointerId) return;
-  const index = clampDrumIndex(Math.round(drumDrag.startIndex - (e.clientY - drumDrag.startY) / DRUM_ITEM_HEIGHT));
+  const position = Math.round(Math.max(DRUM_MIN_POSITION, Math.min(DRUM_MAX_POSITION, drumDrag.startPosition - (e.clientY - drumDrag.startY) / DRUM_ITEM_HEIGHT)));
   drumDrag = null;
-  selectTopSearchType(topSearchTypes[index]);
+  selectTopSearchType(topSearchTypes[typeIndexForDrumPosition(position)], position);
 }
 
 topSearchDrum.addEventListener("pointerup", finishDrumDrag);
 topSearchDrum.addEventListener("pointercancel", finishDrumDrag);
-syncTopSearchType("all");
+syncTopSearchType("all", DRUM_HOME_POSITION);
 
 // ソート変更
 document.querySelectorAll('input[name="sortOrder"]').forEach(r => r.addEventListener("change", () => {
