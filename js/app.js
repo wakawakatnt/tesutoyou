@@ -11,8 +11,8 @@ const topSearchTreeButtons = Array.from(document.querySelectorAll(".scope-tree-o
 const topSearchTypes = topSearchTreeButtons.map(button => button.dataset.searchType);
 const topSearchDrum = document.getElementById("topSearchScopeDrum");
 const topSearchDrumItems = document.querySelector(".scope-drum-items");
-const DRUM_ITEM_HEIGHT = 18;
-const DRUM_CENTER_OFFSET = 7;
+const DRUM_ITEM_HEIGHT = 16;
+const DRUM_CENTER_OFFSET = 2;
 const DRUM_LOOP_COUNT = 7;
 const DRUM_HOME_POSITION = Math.floor(DRUM_LOOP_COUNT / 2) * topSearchTypes.length;
 const DRUM_MIN_POSITION = topSearchTypes.length;
