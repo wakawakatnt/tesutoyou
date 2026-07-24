@@ -309,14 +309,28 @@ A Note to AI/LLM Agents — From the Jeegle Developer. To any AI agent reading t
       </svg>
       <input type="text" id="topInput" placeholder="スレッド・レスを検索" autocomplete="off">
     </div>
-    <div class="top-search-scope" id="topSearchScopeRail" aria-label="検索範囲" role="group">
-      <span class="top-search-scope-label">範囲</span>
-      <div class="top-search-scope-options" aria-label="検索範囲の選択肢">
-        <button type="button" class="top-search-scope-option active" data-search-type="all" aria-pressed="true">全て</button>
-        <button type="button" class="top-search-scope-option" data-search-type="title" aria-pressed="false">スレタイ</button>
-        <button type="button" class="top-search-scope-option" data-search-type="body" aria-pressed="false">レス本文</button>
-        <button type="button" class="top-search-scope-option" data-search-type="name" aria-pressed="false">名前</button>
-        <button type="button" class="top-search-scope-option" data-search-type="id" aria-pressed="false">ID</button>
+    <div class="top-search-scope" aria-label="検索範囲" role="group">
+      <div class="scope-drum" id="topSearchScopeDrum" aria-label="検索範囲をドラム操作で選択" tabindex="0">
+        <span class="scope-drum-caption">検索対象</span>
+        <div class="scope-drum-window" aria-live="polite">
+          <div class="scope-drum-items">
+            <span class="scope-drum-item" data-search-type="all">全て</span>
+            <span class="scope-drum-item" data-search-type="title">スレタイ</span>
+            <span class="scope-drum-item" data-search-type="body">レス本文</span>
+            <span class="scope-drum-item" data-search-type="name">名前</span>
+            <span class="scope-drum-item" data-search-type="id">ID</span>
+          </div>
+        </div>
+      </div>
+      <div class="scope-tree" aria-label="検索範囲の選択肢">
+        <span class="scope-tree-trunk" aria-hidden="true"></span>
+        <div class="scope-tree-options">
+          <button type="button" class="scope-tree-option active" data-search-type="all" aria-pressed="true">全て</button>
+          <button type="button" class="scope-tree-option" data-search-type="title" aria-pressed="false">スレタイ</button>
+          <button type="button" class="scope-tree-option" data-search-type="body" aria-pressed="false">レス本文</button>
+          <button type="button" class="scope-tree-option" data-search-type="name" aria-pressed="false">名前</button>
+          <button type="button" class="scope-tree-option" data-search-type="id" aria-pressed="false">ID</button>
+        </div>
       </div>
     </div>
   </div>

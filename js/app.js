@@ -7,16 +7,34 @@ document.getElementById("topInput").addEventListener("keydown", e => { if (e.key
 document.getElementById("resultInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(e.target.value.trim()); });
 document.getElementById("detailInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(e.target.value.trim()); });
 
-const topSearchTypeButtons = Array.from(document.querySelectorAll(".top-search-scope-option"));
-const topSearchTypes = topSearchTypeButtons.map(button => button.dataset.searchType);
+const topSearchTreeButtons = Array.from(document.querySelectorAll(".scope-tree-option"));
+const topSearchTypes = topSearchTreeButtons.map(button => button.dataset.searchType);
+const topSearchDrum = document.getElementById("topSearchScopeDrum");
+const topSearchDrumItems = document.querySelector(".scope-drum-items");
+const topSearchDrumOptions = Array.from(document.querySelectorAll(".scope-drum-item"));
+const DRUM_ITEM_HEIGHT = 36;
+const DRUM_CENTER_OFFSET = 38;
+let drumDrag = null;
+
+function clampDrumIndex(index) {
+  return Math.max(0, Math.min(topSearchTypes.length - 1, index));
+}
+
+function moveDrumTo(index, animate = true) {
+  topSearchDrumItems.style.transition = animate ? "" : "none";
+  topSearchDrumItems.style.transform = `translateY(${DRUM_CENTER_OFFSET - index * DRUM_ITEM_HEIGHT}px)`;
+  if (!animate) requestAnimationFrame(() => { topSearchDrumItems.style.transition = ""; });
+}
 
 function syncTopSearchType(value) {
-  topSearchTypeButtons.forEach(button => {
+  const index = Math.max(0, topSearchTypes.indexOf(value));
+  topSearchTreeButtons.forEach(button => {
     const active = button.dataset.searchType === value;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
-    if (active) button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
   });
+  topSearchDrumOptions.forEach(item => item.classList.toggle("active", item.dataset.searchType === value));
+  moveDrumTo(index);
 }
 
 function selectTopSearchType(value) {
@@ -26,19 +44,51 @@ function selectTopSearchType(value) {
   window.__userChangedType = true;
 }
 
-topSearchTypeButtons.forEach(button => button.addEventListener("click", () => {
+function selectRelativeDrumType(direction) {
+  const activeType = document.querySelector(".scope-tree-option.active")?.dataset.searchType;
+  const index = clampDrumIndex(topSearchTypes.indexOf(activeType) + direction);
+  selectTopSearchType(topSearchTypes[index]);
+}
+
+topSearchTreeButtons.forEach(button => button.addEventListener("click", () => {
   selectTopSearchType(button.dataset.searchType);
 }));
 
-const topSearchScopeRail = document.getElementById("topSearchScopeRail");
-topSearchScopeRail.addEventListener("wheel", e => {
+topSearchDrum.addEventListener("wheel", e => {
   if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
   e.preventDefault();
-  const activeType = document.querySelector(".top-search-scope-option.active")?.dataset.searchType;
-  const activeIndex = Math.max(0, topSearchTypes.indexOf(activeType));
-  const nextIndex = Math.max(0, Math.min(topSearchTypes.length - 1, activeIndex + (e.deltaY > 0 ? 1 : -1)));
-  if (nextIndex !== activeIndex) selectTopSearchType(topSearchTypes[nextIndex]);
+  selectRelativeDrumType(e.deltaY > 0 ? 1 : -1);
 }, { passive: false });
+
+topSearchDrum.addEventListener("keydown", e => {
+  if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+  e.preventDefault();
+  selectRelativeDrumType(e.key === "ArrowDown" ? 1 : -1);
+});
+
+topSearchDrum.addEventListener("pointerdown", e => {
+  const activeType = document.querySelector(".scope-tree-option.active")?.dataset.searchType;
+  drumDrag = { startY: e.clientY, startIndex: Math.max(0, topSearchTypes.indexOf(activeType)), pointerId: e.pointerId };
+  topSearchDrum.setPointerCapture(e.pointerId);
+});
+
+topSearchDrum.addEventListener("pointermove", e => {
+  if (!drumDrag || e.pointerId !== drumDrag.pointerId) return;
+  const offset = drumDrag.startIndex - (e.clientY - drumDrag.startY) / DRUM_ITEM_HEIGHT;
+  topSearchDrumItems.style.transition = "none";
+  topSearchDrumItems.style.transform = `translateY(${DRUM_CENTER_OFFSET - Math.max(0, Math.min(topSearchTypes.length - 1, offset)) * DRUM_ITEM_HEIGHT}px)`;
+});
+
+function finishDrumDrag(e) {
+  if (!drumDrag || e.pointerId !== drumDrag.pointerId) return;
+  const index = clampDrumIndex(Math.round(drumDrag.startIndex - (e.clientY - drumDrag.startY) / DRUM_ITEM_HEIGHT));
+  drumDrag = null;
+  selectTopSearchType(topSearchTypes[index]);
+}
+
+topSearchDrum.addEventListener("pointerup", finishDrumDrag);
+topSearchDrum.addEventListener("pointercancel", finishDrumDrag);
+syncTopSearchType("all");
 
 // ソート変更
 document.querySelectorAll('input[name="sortOrder"]').forEach(r => r.addEventListener("change", () => {
