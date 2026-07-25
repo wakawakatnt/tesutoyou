@@ -39,7 +39,13 @@
         <div class="ai-settings" aria-label="AI設定">
           <div class="setting-field">
             <label for="modelSelect">モデル</label>
-            <select id="modelSelect"><option value="1">1: gemma-4-26b-a4b-it</option><option value="2">2: gemma-4-31b-it</option></select>
+            <select id="modelSelect">
+              <option value="0">0: デフォルト</option>
+              <option value="1">1: gemma-4-26b-a4b-it</option>
+              <option value="2">2: gemma-4-31b-it</option>
+              <option value="3">3: gemini-3.5-flash-lite</option>
+              <option value="4">4: gemini-3.1-flash-lite</option>
+            </select>
             <small class="field-hint" id="modelHint"></small>
           </div>
           <div class="setting-field">
