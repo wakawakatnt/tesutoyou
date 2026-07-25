@@ -10,6 +10,56 @@ const MAX_LOG_MESSAGES = 40;
 const MAX_CONVERSATIONS = 30;
 const GREETING_TEXT = "こんにちは。おんJのスレッドやレスについて、調べたいことを聞いてください。何かお手伝いできることはありますか?";
 
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function inlineFormat(str) {
+  return str.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
+// **太字** と * 箇条書き(インデントによるネスト対応)だけを扱う簡易Markdownレンダラー
+function renderMarkdown(raw) {
+  const lines = escapeHtml(raw).split("\n");
+  let html = "";
+  const listStack = [];
+
+  const closeListsTo = indent => {
+    while (listStack.length && listStack[listStack.length - 1] >= indent) {
+      html += "</li></ul>";
+      listStack.pop();
+    }
+  };
+
+  lines.forEach(line => {
+    const match = line.match(/^(\s*)[*\-]\s+(.*)$/);
+    if (match) {
+      const indent = match[1].length;
+      const content = inlineFormat(match[2]);
+      if (!listStack.length || indent > listStack[listStack.length - 1]) {
+        html += `<ul><li>${content}`;
+        listStack.push(indent);
+      } else if (indent === listStack[listStack.length - 1]) {
+        html += `</li><li>${content}`;
+      } else {
+        closeListsTo(indent + 1);
+        if (listStack.length && listStack[listStack.length - 1] === indent) {
+          html += `</li><li>${content}`;
+        } else {
+          html += `<ul><li>${content}`;
+          listStack.push(indent);
+        }
+      }
+      return;
+    }
+    closeListsTo(0);
+    if (line.trim() === "") return;
+    html += `<p>${inlineFormat(line)}</p>`;
+  });
+  closeListsTo(0);
+  return html;
+}
+
 const form = document.getElementById("chatForm");
 const input = document.getElementById("chatInput");
 const sendButton = document.getElementById("sendButton");
@@ -43,7 +93,11 @@ function getSavedLog() {
 // static-greeting はUI表示のみの案内なので、保存・送信対象から除外する
 function getMessages() {
   return Array.from(chatLog.querySelectorAll(".chat-message:not(.static-greeting)"))
-    .map(node => ({ role: node.dataset.role, text: node.querySelector(".message-content")?.textContent || "" }))
+    .map(node => {
+      const contentEl = node.querySelector(".message-content");
+      const text = contentEl?.dataset.raw ?? contentEl?.textContent ?? "";
+      return { role: node.dataset.role, text };
+    })
     .filter(item => item.text)
     .slice(-MAX_LOG_MESSAGES);
 }
@@ -124,7 +178,12 @@ function createMessage(role, text = "", isStatic = false) {
 
   const content = document.createElement("div");
   content.className = "message-content";
-  content.textContent = text;
+  content.dataset.raw = text;
+  if (role === "assistant" && !isStatic) {
+    content.innerHTML = renderMarkdown(text);
+  } else {
+    content.textContent = text;
+  }
   message.appendChild(content);
   chatLog.appendChild(message);
 
@@ -265,7 +324,8 @@ function processSseEvent(event, answer) {
   switch (event.type) {
     case "chunk":
       setStatus("");
-      answer.textContent += event.text || "";
+      answer.dataset.raw = (answer.dataset.raw || "") + (event.text || "");
+      answer.innerHTML = renderMarkdown(answer.dataset.raw);
       answer.scrollIntoView({ block: "end", behavior: "smooth" });
       break;
     case "status":
@@ -338,12 +398,16 @@ async function sendMessage(question) {
     if (buffer.trim().startsWith("data: ")) {
       try { processSseEvent(JSON.parse(buffer.trimEnd().slice(6)), answer); } catch (_) {}
     }
-    if (!answer.textContent) answer.textContent = "応答を受信できませんでした。";
+    if (!answer.dataset.raw) {
+      answer.dataset.raw = "応答を受信できませんでした。";
+      answer.innerHTML = renderMarkdown(answer.dataset.raw);
+    }
     saveLog();
     if (!chatStatus.classList.contains("error")) setStatus("");
   } catch (error) {
     if (error.name === "AbortError") return;
-    answer.textContent = answer.textContent ? `${answer.textContent}\n\n${error.message}` : error.message;
+    answer.dataset.raw = answer.dataset.raw ? `${answer.dataset.raw}\n\n${error.message}` : error.message;
+    answer.innerHTML = renderMarkdown(answer.dataset.raw);
     saveLog();
     if (error.status === 429) {
       showCooldown(error.retryAfter);
