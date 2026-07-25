@@ -8,13 +8,13 @@ const ACTIVE_CONVERSATION_KEY = "nang_active_conversation";
 const MAX_CHARS = 500;
 const MAX_LOG_MESSAGES = 40;
 const MAX_CONVERSATIONS = 30;
+const GREETING_TEXT = "こんにちは。おんJのスレッドやレスについて、調べたいことを聞いてください。何かお手伝いできることはありますか?";
 
 const form = document.getElementById("chatForm");
 const input = document.getElementById("chatInput");
 const sendButton = document.getElementById("sendButton");
 const chatLog = document.getElementById("chatLog");
 const chatStatus = document.getElementById("chatStatus");
-const intro = document.getElementById("aiIntro");
 const charCount = document.getElementById("charCount");
 const modelSelect = document.getElementById("modelSelect");
 const thinkingSelect = document.getElementById("thinkingSelect");
@@ -22,6 +22,9 @@ const temperatureInput = document.getElementById("temperatureInput");
 const newChatButton = document.getElementById("newChatButton");
 const conversationList = document.getElementById("conversationList");
 const clearConversationsButton = document.getElementById("clearConversationsButton");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+const aiShell = document.querySelector(".ai-shell");
 
 let sending = false;
 let cooldownUntil = 0;
@@ -37,8 +40,9 @@ function getSavedLog() {
   return Array.isArray(saved) ? saved.filter(item => item && typeof item.text === "string" && ["user", "assistant"].includes(item.role)) : [];
 }
 
+// static-greeting はUI表示のみの案内なので、保存・送信対象から除外する
 function getMessages() {
-  return Array.from(chatLog.querySelectorAll(".chat-message"))
+  return Array.from(chatLog.querySelectorAll(".chat-message:not(.static-greeting)"))
     .map(node => ({ role: node.dataset.role, text: node.querySelector(".message-content")?.textContent || "" }))
     .filter(item => item.text)
     .slice(-MAX_LOG_MESSAGES);
@@ -105,9 +109,9 @@ function setHistoryToken(token) {
   saveActiveConversation();
 }
 
-function createMessage(role, text = "") {
+function createMessage(role, text = "", isStatic = false) {
   const message = document.createElement("article");
-  message.className = `chat-message ${role}`;
+  message.className = `chat-message ${role}${isStatic ? " static-greeting" : ""}`;
   message.dataset.role = role;
 
   if (role === "assistant") {
@@ -123,15 +127,30 @@ function createMessage(role, text = "") {
   content.textContent = text;
   message.appendChild(content);
   chatLog.appendChild(message);
-  intro.hidden = true;
+
+  if (isStatic) {
+    const note = document.createElement("small");
+    note.className = "message-note";
+    note.textContent = "この案内は画面表示のみで、AIへの質問や会話履歴には送信されません。";
+    chatLog.appendChild(note);
+  }
+
   message.scrollIntoView({ block: "end", behavior: "smooth" });
   return content;
 }
 
+// 会話が空のときだけ、案内をAIの吹き出しとして表示する(送信・保存はしない)
+function showGreeting() {
+  createMessage("assistant", GREETING_TEXT, true);
+}
+
 function renderLog(messages) {
   chatLog.innerHTML = "";
-  messages.forEach(item => createMessage(item.role, item.text));
-  intro.hidden = messages.length > 0;
+  if (messages.length) {
+    messages.forEach(item => createMessage(item.role, item.text));
+  } else {
+    showGreeting();
+  }
 }
 
 function restoreLog() {
@@ -179,6 +198,26 @@ function setSending(value) {
   thinkingSelect.disabled = locked;
   temperatureInput.disabled = locked;
   if (!locked) input.focus();
+}
+
+const modelHintText = document.getElementById("modelHint");
+const thinkingHintText = document.getElementById("thinkingHint");
+const temperatureHintText = document.getElementById("temperatureHint");
+
+const MODEL_HINTS = {
+  "1": "gemma-4-26b-a4b-it: 軽量モデルで応答が速く、気軽な質問向き。",
+  "2": "gemma-4-31b-it: パラメータが大きく、より詳しく踏み込んだ回答が得意。"
+};
+const THINKING_HINTS = {
+  "": "サーバー既定: 質問内容に応じてバランスを自動調整します。",
+  "high": "high: 検討量を増やし、より丁寧・正確な回答を優先します(応答はやや遅め)。",
+  "minimal": "minimal: 検討量を抑え、短く素早い回答を優先します。"
+};
+
+function updateSettingHints() {
+  modelHintText.textContent = MODEL_HINTS[modelSelect.value] || "";
+  thinkingHintText.textContent = THINKING_HINTS[thinkingSelect.value] || "";
+  temperatureHintText.textContent = "低いほど安定的、高いほど表現が多様になります(0〜2、空欄はサーバー既定)。";
 }
 
 function updateCharCount() {
@@ -331,7 +370,7 @@ function startNewConversation() {
   } catch (_) {}
   setActiveConversationId("");
   chatLog.innerHTML = "";
-  intro.hidden = false;
+  showGreeting();
   setStatus("");
   setSending(false);
   renderConversationList();
@@ -353,12 +392,26 @@ function loadConversation(id) {
   renderLog(conversation.log);
   setStatus("");
   renderConversationList();
+  closeSidebarOnMobile();
 }
 
 function clearConversations() {
   if (!getConversations().length || !confirm("保存した会話をすべて削除しますか？")) return;
   try { localStorage.removeItem(CONVERSATIONS_KEY); } catch (_) {}
   startNewConversation();
+}
+
+function toggleSidebar() {
+  const collapsed = aiShell.classList.toggle("sidebar-collapsed");
+  document.body.classList.toggle("sidebar-collapsed", collapsed);
+  sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+}
+
+function closeSidebarOnMobile() {
+  if (window.matchMedia("(max-width:900px)").matches) {
+    aiShell.classList.add("sidebar-collapsed");
+    document.body.classList.add("sidebar-collapsed");
+  }
 }
 
 form.addEventListener("submit", event => {
@@ -392,7 +445,17 @@ conversationList.addEventListener("click", event => {
   const button = event.target.closest(".conversation-item");
   if (button) loadConversation(button.dataset.id);
 });
+modelSelect.addEventListener("change", updateSettingHints);
+thinkingSelect.addEventListener("change", updateSettingHints);
+sidebarToggle.addEventListener("click", toggleSidebar);
+sidebarBackdrop.addEventListener("click", () => aiShell.classList.add("sidebar-collapsed"));
+
+if (window.matchMedia("(max-width:900px)").matches) {
+  aiShell.classList.add("sidebar-collapsed");
+  document.body.classList.add("sidebar-collapsed");
+}
 
 restoreLog();
 renderConversationList();
 updateCharCount();
+updateSettingHints();
