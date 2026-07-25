@@ -3,8 +3,11 @@
 const API = `${SB_URL}/ai/chat`;
 const HIST_KEY = "nang_hist";
 const LOG_KEY = "nang_chat_log";
+const CONVERSATIONS_KEY = "nang_conversations";
+const ACTIVE_CONVERSATION_KEY = "nang_active_conversation";
 const MAX_CHARS = 500;
 const MAX_LOG_MESSAGES = 40;
+const MAX_CONVERSATIONS = 30;
 
 const form = document.getElementById("chatForm");
 const input = document.getElementById("chatInput");
@@ -17,27 +20,89 @@ const modelSelect = document.getElementById("modelSelect");
 const thinkingSelect = document.getElementById("thinkingSelect");
 const temperatureInput = document.getElementById("temperatureInput");
 const newChatButton = document.getElementById("newChatButton");
+const conversationList = document.getElementById("conversationList");
+const clearConversationsButton = document.getElementById("clearConversationsButton");
 
 let sending = false;
 let cooldownUntil = 0;
 let cooldownTimer = null;
 let activeController = null;
 
-function getSavedLog() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(LOG_KEY) || "[]");
-    return Array.isArray(saved) ? saved.filter(item => item && typeof item.text === "string" && ["user", "assistant"].includes(item.role)) : [];
-  } catch (_) {
-    return [];
-  }
+function readJson(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || "") || fallback; } catch (_) { return fallback; }
 }
 
-function saveLog() {
-  const messages = Array.from(chatLog.querySelectorAll(".chat-message"))
+function getSavedLog() {
+  const saved = readJson(LOG_KEY, []);
+  return Array.isArray(saved) ? saved.filter(item => item && typeof item.text === "string" && ["user", "assistant"].includes(item.role)) : [];
+}
+
+function getMessages() {
+  return Array.from(chatLog.querySelectorAll(".chat-message"))
     .map(node => ({ role: node.dataset.role, text: node.querySelector(".message-content")?.textContent || "" }))
     .filter(item => item.text)
     .slice(-MAX_LOG_MESSAGES);
+}
+
+function getConversations() {
+  const saved = readJson(CONVERSATIONS_KEY, []);
+  return Array.isArray(saved) ? saved.filter(item => item && typeof item.id === "string" && Array.isArray(item.log)) : [];
+}
+
+function setConversations(conversations) {
+  try { localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations.slice(0, MAX_CONVERSATIONS))); } catch (_) {}
+}
+
+function createConversationId() {
+  return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function conversationTitle(messages) {
+  const firstQuestion = messages.find(item => item.role === "user")?.text || "新しい会話";
+  return firstQuestion.replace(/\s+/g, " ").slice(0, 34) || "新しい会話";
+}
+
+function getActiveConversationId() {
+  try { return localStorage.getItem(ACTIVE_CONVERSATION_KEY) || ""; } catch (_) { return ""; }
+}
+
+function setActiveConversationId(id) {
+  try {
+    if (id) localStorage.setItem(ACTIVE_CONVERSATION_KEY, id);
+    else localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
+  } catch (_) {}
+}
+
+function saveActiveConversation() {
+  const messages = getMessages();
+  if (!messages.length) return;
+
+  const id = getActiveConversationId() || createConversationId();
+  const previous = getConversations().filter(item => item.id !== id);
+  const conversation = {
+    id,
+    title: conversationTitle(messages),
+    updatedAt: Date.now(),
+    historyToken: localStorage.getItem(HIST_KEY) || "",
+    log: messages
+  };
+  setActiveConversationId(id);
+  setConversations([conversation, ...previous]);
+  renderConversationList();
+}
+
+function saveLog() {
+  const messages = getMessages();
   try { localStorage.setItem(LOG_KEY, JSON.stringify(messages)); } catch (_) {}
+  saveActiveConversation();
+}
+
+function setHistoryToken(token) {
+  try {
+    if (token) localStorage.setItem(HIST_KEY, token);
+    else localStorage.removeItem(HIST_KEY);
+  } catch (_) {}
+  saveActiveConversation();
 }
 
 function createMessage(role, text = "") {
@@ -45,24 +110,58 @@ function createMessage(role, text = "") {
   message.className = `chat-message ${role}`;
   message.dataset.role = role;
 
-  const avatar = document.createElement("div");
-  avatar.className = "message-avatar";
-  avatar.setAttribute("aria-hidden", "true");
-  avatar.textContent = role === "user" ? "あなた" : "✦";
+  if (role === "assistant") {
+    const avatar = document.createElement("div");
+    avatar.className = "message-avatar";
+    avatar.setAttribute("aria-hidden", "true");
+    avatar.textContent = "✦";
+    message.appendChild(avatar);
+  }
 
   const content = document.createElement("div");
   content.className = "message-content";
   content.textContent = text;
-
-  message.append(avatar, content);
+  message.appendChild(content);
   chatLog.appendChild(message);
   intro.hidden = true;
   message.scrollIntoView({ block: "end", behavior: "smooth" });
   return content;
 }
 
+function renderLog(messages) {
+  chatLog.innerHTML = "";
+  messages.forEach(item => createMessage(item.role, item.text));
+  intro.hidden = messages.length > 0;
+}
+
 function restoreLog() {
-  getSavedLog().forEach(item => createMessage(item.role, item.text));
+  renderLog(getSavedLog());
+}
+
+function renderConversationList() {
+  const conversations = getConversations();
+  const activeId = getActiveConversationId();
+  conversationList.innerHTML = "";
+
+  if (!conversations.length) {
+    const empty = document.createElement("p");
+    empty.className = "conversation-empty";
+    empty.textContent = "保存した会話はまだありません。";
+    conversationList.appendChild(empty);
+    return;
+  }
+
+  conversations.forEach(conversation => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "conversation-item";
+    button.classList.toggle("active", conversation.id === activeId);
+    button.dataset.id = conversation.id;
+    button.innerHTML = `<strong></strong><small></small>`;
+    button.querySelector("strong").textContent = conversation.title;
+    button.querySelector("small").textContent = new Date(conversation.updatedAt).toLocaleString("ja-JP", { dateStyle: "short", timeStyle: "short" });
+    conversationList.appendChild(button);
+  });
 }
 
 function setStatus(text, type = "loading") {
@@ -103,7 +202,7 @@ function showCooldown(seconds) {
   const tick = () => {
     const remaining = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
     if (!remaining) {
-      setStatus("", "loading");
+      setStatus("");
       setSending(false);
       return;
     }
@@ -117,10 +216,7 @@ function showCooldown(seconds) {
 async function readError(response) {
   const contentType = response.headers.get("Content-Type") || "";
   if (contentType.includes("application/json")) {
-    try {
-      const json = await response.json();
-      return json.error || "エラーが発生しました。";
-    } catch (_) {}
+    try { return (await response.json()).error || "エラーが発生しました。"; } catch (_) {}
   }
   const text = (await response.text()).trim();
   return text || "エラーが発生しました。";
@@ -137,7 +233,7 @@ function processSseEvent(event, answer) {
       setStatus(event.text || "検索しています…");
       break;
     case "history":
-      if (typeof event.token === "string" && event.token) localStorage.setItem(HIST_KEY, event.token);
+      if (typeof event.token === "string" && event.token) setHistoryToken(event.token);
       break;
     case "error":
       setStatus(event.text || "エラーが発生しました。", "error");
@@ -152,22 +248,17 @@ function consumeSseLines(buffer, answer) {
   let completed = false;
   const lines = buffer.split("\n");
   const remainder = lines.pop() || "";
-
   for (const rawLine of lines) {
     const line = rawLine.trimEnd();
     if (!line.startsWith("data: ")) continue;
-    try {
-      completed = processSseEvent(JSON.parse(line.slice(6)), answer) || completed;
-    } catch (_) {
-      // 壊れたイベントは無視し、次のイベントを待つ。
-    }
+    try { completed = processSseEvent(JSON.parse(line.slice(6)), answer) || completed; } catch (_) {}
   }
-
   return { completed, remainder };
 }
 
 async function sendMessage(question) {
   createMessage("user", question);
+  saveLog();
   const answer = createMessage("assistant");
   const controller = new AbortController();
   activeController = controller;
@@ -179,12 +270,8 @@ async function sendMessage(question) {
       method: "POST",
       signal: controller.signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: buildMessage(question),
-        history_token: localStorage.getItem(HIST_KEY) || null
-      })
+      body: JSON.stringify({ message: buildMessage(question), history_token: localStorage.getItem(HIST_KEY) || null })
     });
-
     if (!response.ok) {
       if (response.status === 403) throw Object.assign(new Error("このネットワークからは利用できません。"), { status: 403 });
       if (response.status === 429) {
@@ -200,7 +287,6 @@ async function sendMessage(question) {
     const decoder = new TextDecoder();
     let buffer = "";
     let completed = false;
-
     while (!completed) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -210,22 +296,15 @@ async function sendMessage(question) {
       completed = parsed.completed || completed;
     }
     buffer += decoder.decode();
-    if (buffer.trim()) {
-      const finalLine = buffer.trimEnd();
-      if (finalLine.startsWith("data: ")) {
-        try { processSseEvent(JSON.parse(finalLine.slice(6)), answer); } catch (_) {}
-      }
+    if (buffer.trim().startsWith("data: ")) {
+      try { processSseEvent(JSON.parse(buffer.trimEnd().slice(6)), answer); } catch (_) {}
     }
     if (!answer.textContent) answer.textContent = "応答を受信できませんでした。";
     saveLog();
     if (!chatStatus.classList.contains("error")) setStatus("");
   } catch (error) {
     if (error.name === "AbortError") return;
-    if (answer.textContent) {
-      answer.textContent += `\n\n${error.message}`;
-    } else {
-      answer.textContent = error.message;
-    }
+    answer.textContent = answer.textContent ? `${answer.textContent}\n\n${error.message}` : error.message;
     saveLog();
     if (error.status === 429) {
       showCooldown(error.retryAfter);
@@ -240,6 +319,48 @@ async function sendMessage(question) {
   }
 }
 
+function startNewConversation() {
+  if (sending && !confirm("送信中の応答があります。新しい会話を開始しますか？")) return;
+  clearTimeout(cooldownTimer);
+  if (activeController) activeController.abort();
+  activeController = null;
+  cooldownUntil = 0;
+  try {
+    localStorage.removeItem(HIST_KEY);
+    localStorage.removeItem(LOG_KEY);
+  } catch (_) {}
+  setActiveConversationId("");
+  chatLog.innerHTML = "";
+  intro.hidden = false;
+  setStatus("");
+  setSending(false);
+  renderConversationList();
+}
+
+function loadConversation(id) {
+  if (sending) {
+    setStatus("送信中は会話を切り替えられません。", "error");
+    return;
+  }
+  const conversation = getConversations().find(item => item.id === id);
+  if (!conversation) return;
+  try {
+    localStorage.setItem(LOG_KEY, JSON.stringify(conversation.log));
+    if (conversation.historyToken) localStorage.setItem(HIST_KEY, conversation.historyToken);
+    else localStorage.removeItem(HIST_KEY);
+  } catch (_) {}
+  setActiveConversationId(conversation.id);
+  renderLog(conversation.log);
+  setStatus("");
+  renderConversationList();
+}
+
+function clearConversations() {
+  if (!getConversations().length || !confirm("保存した会話をすべて削除しますか？")) return;
+  try { localStorage.removeItem(CONVERSATIONS_KEY); } catch (_) {}
+  startNewConversation();
+}
+
 form.addEventListener("submit", event => {
   event.preventDefault();
   if (sending || Date.now() < cooldownUntil) return;
@@ -249,9 +370,7 @@ form.addEventListener("submit", event => {
     input.focus();
     return;
   }
-  try {
-    buildMessage(question);
-  } catch (error) {
+  try { buildMessage(question); } catch (error) {
     setStatus(error.message, "error");
     return;
   }
@@ -267,22 +386,13 @@ input.addEventListener("keydown", event => {
     form.requestSubmit();
   }
 });
-
-newChatButton.addEventListener("click", () => {
-  if (sending && !confirm("送信中の応答があります。新しい会話を開始しますか？")) return;
-  clearTimeout(cooldownTimer);
-  if (activeController) activeController.abort();
-  activeController = null;
-  cooldownUntil = 0;
-  try {
-    localStorage.removeItem(HIST_KEY);
-    localStorage.removeItem(LOG_KEY);
-  } catch (_) {}
-  chatLog.innerHTML = "";
-  intro.hidden = false;
-  setStatus("");
-  setSending(false);
+newChatButton.addEventListener("click", startNewConversation);
+clearConversationsButton.addEventListener("click", clearConversations);
+conversationList.addEventListener("click", event => {
+  const button = event.target.closest(".conversation-item");
+  if (button) loadConversation(button.dataset.id);
 });
 
 restoreLog();
+renderConversationList();
 updateCharCount();
