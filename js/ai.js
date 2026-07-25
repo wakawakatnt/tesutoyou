@@ -268,13 +268,43 @@ const MODEL_HINTS = {
   "1": "gemma-4-26b-a4b-it: 軽量モデルで応答が速く、気軽な質問向き。",
   "2": "gemma-4-31b-it: パラメータが大きく、より詳しく踏み込んだ回答が得意。",
   "3": "gemini-3.5-flash-lite: 高速・軽量でバランスの良い汎用モデル。",
-  "4": "gemini-3.1-flash-lite: 3.5系より少し前の世代の高速軽量モデル。"
+  "4": "gemini-3.1-flash-lite: 3.5系より少し前の世代の高速軽量モデル。",
+  "5": "gemini-flash(flash族): flash-lite系より上位で、より高精度な回答が可能。"
 };
 const THINKING_HINTS = {
   "": "サーバー既定: 質問内容に応じてバランスを自動調整します。",
-  "high": "high: 検討量を増やし、より丁寧・正確な回答を優先します(応答はやや遅め)。",
-  "minimal": "minimal: 検討量を抑え、短く素早い回答を優先します。"
+  "minimal": "minimal: 検討量を抑え、短く素早い回答を優先します。",
+  "low": "low: minimalよりやや丁寧に検討します。",
+  "medium": "medium: 速度と精度のバランスが取れた標準的な検討量です。",
+  "high": "high: 検討量を増やし、より丁寧・正確な回答を優先します(応答はやや遅め)。"
 };
+
+// モデルごとに選べる思考レベルの段階が異なるため、選択中のモデルに応じてoptionを作り直す
+const THINKING_LEVELS_BY_GROUP = {
+  none: [["", "サーバー既定"]],
+  gemma: [["", "サーバー既定"], ["minimal", "minimal"], ["high", "high"]],
+  flash: [["", "サーバー既定"], ["minimal", "minimal"], ["low", "low"], ["medium", "medium"], ["high", "high"]]
+};
+
+function getThinkingGroup(modelValue) {
+  if (modelValue === "0") return "none";
+  if (modelValue === "1" || modelValue === "2") return "gemma";
+  return "flash";
+}
+
+function rebuildThinkingOptions() {
+  const group = getThinkingGroup(modelSelect.value);
+  const levels = THINKING_LEVELS_BY_GROUP[group];
+  const current = thinkingSelect.value;
+  thinkingSelect.innerHTML = "";
+  levels.forEach(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    thinkingSelect.appendChild(option);
+  });
+  thinkingSelect.value = levels.some(([value]) => value === current) ? current : "";
+}
 
 function updateSettingHints() {
   modelHintText.textContent = MODEL_HINTS[modelSelect.value] || "";
@@ -512,7 +542,10 @@ conversationList.addEventListener("click", event => {
   const button = event.target.closest(".conversation-item");
   if (button) loadConversation(button.dataset.id);
 });
-modelSelect.addEventListener("change", updateSettingHints);
+modelSelect.addEventListener("change", () => {
+  rebuildThinkingOptions();
+  updateSettingHints();
+});
 thinkingSelect.addEventListener("change", updateSettingHints);
 sidebarToggle.addEventListener("click", toggleSidebar);
 sidebarBackdrop.addEventListener("click", () => aiShell.classList.add("sidebar-collapsed"));
@@ -525,4 +558,5 @@ if (window.matchMedia("(max-width:900px)").matches) {
 restoreLog();
 renderConversationList();
 updateCharCount();
+rebuildThinkingOptions();
 updateSettingHints();
