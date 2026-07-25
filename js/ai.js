@@ -264,8 +264,11 @@ const thinkingHintText = document.getElementById("thinkingHint");
 const temperatureHintText = document.getElementById("temperatureHint");
 
 const MODEL_HINTS = {
+  "0": "デフォルト: サーバーが自動で最適なモデルを選びます。迷ったらこれでOK。",
   "1": "gemma-4-26b-a4b-it: 軽量モデルで応答が速く、気軽な質問向き。",
-  "2": "gemma-4-31b-it: パラメータが大きく、より詳しく踏み込んだ回答が得意。"
+  "2": "gemma-4-31b-it: パラメータが大きく、より詳しく踏み込んだ回答が得意。",
+  "3": "gemini-3.5-flash-lite: 高速・軽量でバランスの良い汎用モデル。",
+  "4": "gemini-3.1-flash-lite: 3.5系より少し前の世代の高速軽量モデル。"
 };
 const THINKING_HINTS = {
   "": "サーバー既定: 質問内容に応じてバランスを自動調整します。",
