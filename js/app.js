@@ -218,11 +218,18 @@ function renderSearchHistory() {
 function recordSearchHistory(query, type) {
   const normalizedQuery = String(query).trim();
   if (!normalizedQuery) return;
-  const history = getSearchHistory().filter(item => item.query !== normalizedQuery);
+
+  const normalizedType = searchTypeLabels[type] ? type : "all";
   const date = normalizeHistoryDateParam(getDateRange().urlParam);
+
+  // 同じ語でも検索対象や日付範囲が違えば別の検索として残す。
+  // 例: 「全て」→「ID」への再検索では、全ての履歴を残したままIDを追加する。
+  const history = getSearchHistory().filter(item =>
+    item.query !== normalizedQuery || item.type !== normalizedType || item.date !== date
+  );
   history.unshift({
     query: normalizedQuery,
-    type: searchTypeLabels[type] ? type : "all",
+    type: normalizedType,
     date
   });
   try {
