@@ -17,7 +17,13 @@ function escapeHtml(str) {
 function inlineFormat(str) {
   return str
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/`([^`]+?)`/g, "<code>$1</code>");
+    .replace(/`([^`]+?)`/g, "<code>$1</code>")
+    .replace(/(https?:\/\/[^\s<]+)/g, url => {
+      const trimmedTrailing = url.match(/^(.*?)([)\]},.!?:;]*)$/);
+      const cleanUrl = trimmedTrailing ? trimmedTrailing[1] : url;
+      const trailing = trimmedTrailing ? trimmedTrailing[2] : "";
+      return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${trailing}`;
+    });
 }
 
 // **太字**、`インラインコード`、# 〜 ### 見出し、* 箇条書き(インデントによるネスト対応)を扱う簡易Markdownレンダラー
