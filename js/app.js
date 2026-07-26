@@ -157,6 +157,28 @@ function getSearchHistory() {
   }
 }
 
+function isValidHistoryDate(value) {
+  if (!/^\d{6}$/.test(value || "")) return false;
+  const date = fromYMD(value);
+  return Boolean(date && toYMD(date) === value);
+}
+
+function normalizeHistoryDateParam(value) {
+  const parts = String(value || "").split("-");
+  if (!isValidHistoryDate(parts[0])) return "";
+  const end = parts[1] || parts[0];
+  if (!isValidHistoryDate(end)) return "";
+  return parts[0] <= end ? (parts.length > 1 ? `${parts[0]}-${end}` : parts[0]) : `${end}-${parts[0]}`;
+}
+
+function formatHistoryDate(value) {
+  const dateParam = normalizeHistoryDateParam(value);
+  if (!dateParam) return "日付未保存";
+  const [from, to] = dateParam.split("-");
+  const format = ymd => `${ymd.slice(0, 2)}/${ymd.slice(2, 4)}/${ymd.slice(4, 6)}`;
+  return from === to || !to ? format(from) : `${format(from)}〜${format(to)}`;
+}
+
 function renderSearchHistory() {
   const section = document.getElementById("searchHistory");
   const list = document.getElementById("searchHistoryList");
@@ -177,9 +199,14 @@ function renderSearchHistory() {
     const scope = document.createElement("span");
     scope.className = "search-history-scope";
     scope.textContent = searchTypeLabels[item.type] || searchTypeLabels.all;
-    button.append(query, scope);
+    const date = document.createElement("span");
+    date.className = "search-history-date";
+    date.textContent = formatHistoryDate(item.date);
+    button.append(query, scope, date);
     button.addEventListener("click", () => {
       const type = searchTypeLabels[item.type] ? item.type : "all";
+      const dateParam = normalizeHistoryDateParam(item.date);
+      applyDateParam(dateParam || null);
       selectTopSearchType(type);
       document.getElementById("topInput").value = item.query;
       doSearch(item.query);
@@ -192,7 +219,12 @@ function recordSearchHistory(query, type) {
   const normalizedQuery = String(query).trim();
   if (!normalizedQuery) return;
   const history = getSearchHistory().filter(item => item.query !== normalizedQuery);
-  history.unshift({ query: normalizedQuery, type: searchTypeLabels[type] ? type : "all" });
+  const date = normalizeHistoryDateParam(getDateRange().urlParam);
+  history.unshift({
+    query: normalizedQuery,
+    type: searchTypeLabels[type] ? type : "all",
+    date
+  });
   try {
     localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, SEARCH_HISTORY_LIMIT)));
   } catch (_) {
