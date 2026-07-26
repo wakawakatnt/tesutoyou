@@ -38,9 +38,9 @@ body {
   opacity:.32; filter:blur(.55px); transform:scale(.92); transition:opacity .2s, filter .2s, transform .2s, color .2s;
 }
 .scope-drum-item.active { color:#202124; opacity:1; filter:none; transform:scale(1); }
-.top-search-scope { display:flex; align-items:center; flex:0 0 174px; height:92px; margin-left:-1px; }
-.scope-tree { position:relative; display:flex; align-items:center; width:174px; height:92px; }
-.scope-tree-lines { position:absolute; left:0; top:0; width:58px; height:92px; overflow:visible; }
+.top-search-scope { display:flex; align-items:center; flex:0 0 174px; height:110px; margin-left:-1px; }
+.scope-tree { position:relative; display:flex; align-items:center; width:174px; height:110px; }
+.scope-tree-lines { position:absolute; left:0; top:0; width:58px; height:110px; overflow:visible; }
 .scope-tree-lines path { fill:none; stroke:#dfe1e5; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
 .scope-tree-options { position:relative; z-index:1; display:flex; flex-direction:column; gap:3px; padding-left:50px; }
 .scope-tree-option {
@@ -50,6 +50,9 @@ body {
 .scope-tree-option:hover { background:#f1f3f4; color:#202124; }
 .scope-tree-option.active { background:#e8f0fe; color:#1967d2; font-weight:700; box-shadow:inset 3px 0 #1a73e8; }
 .scope-tree-option:focus-visible { outline:2px solid #1a73e8; outline-offset:1px; }
+.ai-mode-option { color:#7b1fa2; }
+.ai-mode-option.active { background:#f3e8fd; color:#7b1fa2; box-shadow:inset 3px 0 #a142f4; }
+.scope-mobile-options { display:none; }
 .search-btn-wrap { margin-top:24px; }
 .search-btn {
   background:#f8f9fa; border:1px solid #f8f9fa; border-radius:4px;
@@ -243,14 +246,15 @@ mark.hl { background:#ffeb3b; padding:1px 2px; border-radius:2px; font-style:nor
   .search-options-bar { padding:8px 12px; gap:8px; }
   .results-container,.thread-detail-posts { padding:8px 12px 40px; }
   .logo { font-size:48px; }
-  .top-search-controls { width:94%; }
+  .top-search-controls { width:94%; flex-wrap:wrap; gap:8px 0; }
+  .search-box { flex:0 0 100%; }
   .search-box .scope-drum { flex-basis:82px; margin-left:6px; padding:3px 5px; }
   .scope-drum-icon { width:12px; height:12px; margin-right:3px; }
-  .top-search-scope { flex-basis:146px; height:92px; }
-  .scope-tree { width:146px; height:92px; }
-  .scope-tree-lines { width:47px; height:92px; }
-  .scope-tree-options { gap:3px; padding-left:40px; }
-  .scope-tree-option { min-width:104px; height:15px; padding:0 5px; font-size:10px; }
+  .top-search-scope { display:none; }
+  .scope-mobile-options { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; width:100%; }
+  .scope-mobile-option { min-width:0; height:28px; border:1px solid #dfe1e5; border-radius:14px; background:#fff; color:#5f6368; cursor:pointer; font:11px/1 inherit; white-space:nowrap; }
+  .scope-mobile-option.active { border-color:#a8c7fa; background:#e8f0fe; color:#1967d2; font-weight:700; }
+  .scope-mobile-option.ai-mode-option.active { border-color:#d7b7ee; background:#f3e8fd; color:#7b1fa2; }
 
   .post-buttons { margin-left:auto; margin-top:0; width:auto; }
 

@@ -8,6 +8,7 @@ document.getElementById("resultInput").addEventListener("keydown", e => { if (e.
 document.getElementById("detailInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(e.target.value.trim()); });
 
 const topSearchTreeButtons = Array.from(document.querySelectorAll(".scope-tree-option"));
+const topSearchMobileButtons = Array.from(document.querySelectorAll(".scope-mobile-option"));
 const topSearchTypes = topSearchTreeButtons.map(button => button.dataset.searchType);
 const topSearchDrum = document.getElementById("topSearchScopeDrum");
 const topSearchDrumItems = document.querySelector(".scope-drum-items");
@@ -70,8 +71,9 @@ function recenterDrumIfNeeded() {
 
 function syncTopSearchType(value, preferredPosition) {
   const typeIndex = Math.max(0, topSearchTypes.indexOf(value));
+  window.__topSearchType = value;
   drumPosition = preferredPosition === undefined ? closestDrumPositionForType(value) : preferredPosition;
-  topSearchTreeButtons.forEach(button => {
+  topSearchTreeButtons.concat(topSearchMobileButtons).forEach(button => {
     const active = button.dataset.searchType === value;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
@@ -99,7 +101,7 @@ function selectRelativeDrumType(direction) {
   selectTopSearchType(nextType, nextPosition);
 }
 
-topSearchTreeButtons.forEach(button => button.addEventListener("click", () => {
+topSearchTreeButtons.concat(topSearchMobileButtons).forEach(button => button.addEventListener("click", () => {
   selectTopSearchType(button.dataset.searchType);
 }));
 
@@ -144,7 +146,7 @@ syncTopSearchType("all", DRUM_HOME_POSITION);
    ================================================================ */
 const SEARCH_HISTORY_KEY = "jeegle-search-history-v1";
 const SEARCH_HISTORY_LIMIT = 10;
-const searchTypeLabels = { all: "全て", title: "スレタイ", body: "レス本文", name: "名前", id: "ID" };
+const searchTypeLabels = { all: "全て", title: "スレタイ", body: "レス本文", name: "名前", id: "ID", ai: "AIモード" };
 
 function getSearchHistory() {
   try {

@@ -37,6 +37,13 @@ async function doSearch(q, opts) {
   if (q === undefined) q = document.getElementById("topInput").value.trim();
   q = String(q).trim();
   if (!q) return;
+
+  // トップのAIモードは通常検索を実行せず、質問をAIページへ引き渡す。
+  if (window.__topSearchType === "ai") {
+    window.location.href = `ai.html?q=${encodeURIComponent(q)}`;
+    return;
+  }
+
   currentKeyword = q;
 
   const idp = parseIdPrefix(q);
