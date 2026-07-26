@@ -190,7 +190,7 @@ function createMessage(role, text = "", isStatic = false) {
   if (isStatic) {
     const note = document.createElement("small");
     note.className = "message-note";
-    note.textContent = "この案内は画面表示のみで、AIへの質問や会話履歴には送信されません。";
+    note.textContent = "この案内は画面表示のみで、AIへの質問や会話履歴には送信されません。<br>これはAIであり、間違えることがあります。";
     chatLog.appendChild(note);
   }
 
