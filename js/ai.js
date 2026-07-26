@@ -511,6 +511,18 @@ function closeSidebarOnMobile() {
   }
 }
 
+function startQuestionFromSearchPage() {
+  const url = new URL(window.location.href);
+  const question = (url.searchParams.get("q") || "").trim().slice(0, MAX_CHARS);
+  if (!question) return;
+
+  // 戻る・再読み込みで同じ質問を再送しないよう、受け渡し用パラメータは先に消す。
+  url.searchParams.delete("q");
+  history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  startNewConversation();
+  sendMessage(question);
+}
+
 form.addEventListener("submit", event => {
   event.preventDefault();
   if (sending || Date.now() < cooldownUntil) return;
@@ -560,3 +572,4 @@ renderConversationList();
 updateCharCount();
 rebuildThinkingOptions();
 updateSettingHints();
+startQuestionFromSearchPage();
