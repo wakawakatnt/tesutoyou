@@ -730,10 +730,12 @@ mark.hl { background:#ffeb3b; padding:1px 2px; border-radius:2px; font-style:nor
 }
 .search-history-item:hover { background:#f1f3f4; border-color:#bdc1c6; }
 .search-history-query { max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.search-history-scope { flex-shrink:0; padding-left:7px; border-left:1px solid #dadce0; color:#5f6368; font-size:11px; }
+.search-history-scope,.search-history-date { flex-shrink:0; padding-left:7px; border-left:1px solid #dadce0; color:#5f6368; font-size:11px; }
+.search-history-date { color:#7b1fa2; }
 @media(max-width:640px){
   .search-history { width:94%; padding:12px; }
-  .search-history-query { max-width:180px; }
+  .search-history-query { max-width:140px; }
+  .search-history-item { flex-wrap:wrap; row-gap:4px; }
 }
 
 /* ===== モバイル：展開スレッドの折りたたみレール（幅を取らずに重ねる）===== */
