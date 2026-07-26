@@ -15,10 +15,12 @@ function escapeHtml(str) {
 }
 
 function inlineFormat(str) {
-  return str.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  return str
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+?)`/g, "<code>$1</code>");
 }
 
-// **太字** と * 箇条書き(インデントによるネスト対応)だけを扱う簡易Markdownレンダラー
+// **太字**、`インラインコード`、# 〜 ### 見出し、* 箇条書き(インデントによるネスト対応)を扱う簡易Markdownレンダラー
 function renderMarkdown(raw) {
   const lines = escapeHtml(raw).split("\n");
   let html = "";
@@ -32,6 +34,13 @@ function renderMarkdown(raw) {
   };
 
   lines.forEach(line => {
+    const headingMatch = line.match(/^(#{1,3})\s+(.*)$/);
+    if (headingMatch) {
+      closeListsTo(0);
+      const level = headingMatch[1].length;
+      html += `<h${level}>${inlineFormat(headingMatch[2])}</h${level}>`;
+      return;
+    }
     const match = line.match(/^(\s*)[*\-]\s+(.*)$/);
     if (match) {
       const indent = match[1].length;
